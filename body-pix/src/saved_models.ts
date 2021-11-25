@@ -22,27 +22,27 @@ const MOBILENET_BASE_URL =
 
 // The BodyPix 2.0 ResNet50 models use the latest TensorFlow.js 1.0 model
 // format.
-export function resNet50SavedModel(stride: number, quantBytes: number): string {
+export function resNet50SavedModel(stride: number, quantBytes: number, baseUrl: string = RESNET50_BASE_URL): string {
   const graphJson = `model-stride${stride}.json`;
   // quantBytes=4 corresponding to the non-quantized full-precision SavedModel.
   if (quantBytes === 4) {
-    return RESNET50_BASE_URL + `float/` + graphJson;
+    return baseUrl + `float/` + graphJson;
   } else {
-    return RESNET50_BASE_URL + `quant${quantBytes}/` + graphJson;
+    return baseUrl + `quant${quantBytes}/` + graphJson;
   }
 }
 
 // The BodyPix 2.0 MobileNetV1 models use the latest TensorFlow.js 1.0 model
 // format.
 export function mobileNetSavedModel(
-    stride: number, multiplier: number, quantBytes: number): string {
+    stride: number, multiplier: number, quantBytes: number, baseUrl: string = MOBILENET_BASE_URL): string {
   const toStr: {[key: number]: string} = {1.0: '100', 0.75: '075', 0.50: '050'};
   const graphJson = `model-stride${stride}.json`;
   // quantBytes=4 corresponding to the non-quantized full-precision SavedModel.
   if (quantBytes === 4) {
-    return MOBILENET_BASE_URL + `float/${toStr[multiplier]}/` + graphJson;
+    return baseUrl + `float/${toStr[multiplier]}/` + graphJson;
   } else {
-    return MOBILENET_BASE_URL + `quant${quantBytes}/${toStr[multiplier]}/` +
+    return baseUrl + `quant${quantBytes}/${toStr[multiplier]}/` +
         graphJson;
   }
 }

@@ -67,6 +67,7 @@ export interface ModelConfig {
   outputStride: BodyPixOutputStride;
   multiplier?: BodyPixMultiplier;
   modelUrl?: string;
+  baseUrl?: string;
   quantBytes?: BodyPixQuantBytes;
 }
 
@@ -986,6 +987,7 @@ async function loadMobileNet(config: ModelConfig): Promise<BodyPix> {
   const outputStride = config.outputStride;
   const quantBytes = config.quantBytes;
   const multiplier = config.multiplier;
+  const baseUrl = config.baseUrl;
   if (tf == null) {
     throw new Error(
         `Cannot find TensorFlow.js. If you are using a <script> tag, please ` +
@@ -993,7 +995,7 @@ async function loadMobileNet(config: ModelConfig): Promise<BodyPix> {
         model.`);
   }
 
-  const url = mobileNetSavedModel(outputStride, multiplier, quantBytes);
+  const url = mobileNetSavedModel(outputStride, multiplier, quantBytes, baseUrl);
   const graphModel = await tfconv.loadGraphModel(config.modelUrl || url);
   const mobilenet = new MobileNet(graphModel, outputStride);
   return new BodyPix(mobilenet);
@@ -1005,6 +1007,7 @@ async function loadMobileNet(config: ModelConfig): Promise<BodyPix> {
 async function loadResNet(config: ModelConfig): Promise<BodyPix> {
   const outputStride = config.outputStride;
   const quantBytes = config.quantBytes;
+  const baseUrl = config.baseUrl;
   if (tf == null) {
     throw new Error(
         `Cannot find TensorFlow.js. If you are using a <script> tag, please ` +
@@ -1012,7 +1015,7 @@ async function loadResNet(config: ModelConfig): Promise<BodyPix> {
         model.`);
   }
 
-  const url = resNet50SavedModel(outputStride, quantBytes);
+  const url = resNet50SavedModel(outputStride, quantBytes, baseUrl);
   const graphModel = await tfconv.loadGraphModel(config.modelUrl || url);
   const resnet = new ResNet(graphModel, outputStride);
   return new BodyPix(resnet);
