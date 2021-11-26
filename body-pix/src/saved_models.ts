@@ -15,34 +15,33 @@
  * =============================================================================
  */
 
-const RESNET50_BASE_URL =
-    'https://storage.googleapis.com/tfjs-models/savedmodel/bodypix/resnet50/';
-const MOBILENET_BASE_URL =
-    'https://storage.googleapis.com/tfjs-models/savedmodel/bodypix/mobilenet/';
+const BASE_URL = 'https://storage.googleapis.com/tfjs-models/savedmodel/bodypix/';
+const MOBILENET_MODEL_PATH = 'mobilenet/'
+const RESNET50_MODEL_PATH = 'resnet50/'
 
 // The BodyPix 2.0 ResNet50 models use the latest TensorFlow.js 1.0 model
 // format.
-export function resNet50SavedModel(stride: number, quantBytes: number, baseUrl: string = RESNET50_BASE_URL): string {
+export function resNet50SavedModel(stride: number, quantBytes: number, baseUrl: string = BASE_URL, modelPath: string = RESNET50_MODEL_PATH ): string {
   const graphJson = `model-stride${stride}.json`;
   // quantBytes=4 corresponding to the non-quantized full-precision SavedModel.
   if (quantBytes === 4) {
-    return baseUrl + `float/` + graphJson;
+    return baseUrl + modelPath + `float/` + graphJson;
   } else {
-    return baseUrl + `quant${quantBytes}/` + graphJson;
+    return baseUrl + modelPath + `quant${quantBytes}/` + graphJson;
   }
 }
 
 // The BodyPix 2.0 MobileNetV1 models use the latest TensorFlow.js 1.0 model
 // format.
 export function mobileNetSavedModel(
-    stride: number, multiplier: number, quantBytes: number, baseUrl: string = MOBILENET_BASE_URL): string {
+    stride: number, multiplier: number, quantBytes: number, baseUrl: string = BASE_URL, modelPath: string = MOBILENET_MODEL_PATH): string {
   const toStr: {[key: number]: string} = {1.0: '100', 0.75: '075', 0.50: '050'};
   const graphJson = `model-stride${stride}.json`;
   // quantBytes=4 corresponding to the non-quantized full-precision SavedModel.
   if (quantBytes === 4) {
-    return baseUrl + `float/${toStr[multiplier]}/` + graphJson;
+    return baseUrl + modelPath + `float/${toStr[multiplier]}/` + graphJson;
   } else {
-    return baseUrl + `quant${quantBytes}/${toStr[multiplier]}/` +
+    return baseUrl + modelPath + `quant${quantBytes}/${toStr[multiplier]}/` +
         graphJson;
   }
 }
