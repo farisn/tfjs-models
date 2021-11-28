@@ -178,7 +178,9 @@ export function toMask(
       b: 0,
       a: 255
     },
-    drawContour = false, foregroundIds: number[] = [1]): ImageData {
+    drawContour = false,
+    foregroundIds: number[] = [1]
+): ImageData {
   if (Array.isArray(personOrPartSegmentation) &&
       personOrPartSegmentation.length === 0) {
     return null;
@@ -196,44 +198,6 @@ export function toMask(
 
   const {width, height} = multiPersonOrPartSegmentation[0];
   const bytes = new Uint8ClampedArray(width * height * 4);
-
-  function drawStroke(
-      bytes: Uint8ClampedArray, row: number, column: number, width: number,
-      radius: number, color: Color = {r: 0, g: 255, b: 255, a: 255}) {
-    for (let i = -radius; i <= radius; i++) {
-      for (let j = -radius; j <= radius; j++) {
-        if (i !== 0 && j !== 0) {
-          const n = (row + i) * width + (column + j);
-          bytes[4 * n + 0] = color.r;
-          bytes[4 * n + 1] = color.g;
-          bytes[4 * n + 2] = color.b;
-          bytes[4 * n + 3] = color.a;
-        }
-      }
-    }
-  }
-
-  function isSegmentationBoundary(
-      segmentationData: Uint8Array|Int32Array,
-      row: number,
-      column: number,
-      width: number,
-      foregroundIds: number[] = [1],
-      radius = 1,
-      ): boolean {
-    let numberBackgroundPixels = 0;
-    for (let i = -radius; i <= radius; i++) {
-      for (let j = -radius; j <= radius; j++) {
-        if (i !== 0 && j !== 0) {
-          const n = (row + i) * width + (column + j);
-          if (!foregroundIds.some(id => id === segmentationData[n])) {
-            numberBackgroundPixels += 1;
-          }
-        }
-      }
-    }
-    return numberBackgroundPixels > 0;
-  }
 
   for (let i = 0; i < height; i += 1) {
     for (let j = 0; j < width; j += 1) {
@@ -255,6 +219,108 @@ export function toMask(
           if (drawContour && i - 1 >= 0 && i + 1 < height && j - 1 >= 0 &&
               j + 1 < width && isBoundary) {
             drawStroke(bytes, i, j, width, 1);
+          }
+        }
+      }
+    }
+  }
+
+  return new ImageData(bytes, width, height);
+}
+
+function drawStroke(
+    bytes: Uint8ClampedArray, row: number, column: number, width: number,
+    radius: number, color: Color = {r: 0, g: 255, b: 255, a: 255}) {
+  for (let i = -radius; i <= radius; i++) {
+    for (let j = -radius; j <= radius; j++) {
+      const n = (row + i) * width + (column + j);
+      bytes[4 * n + 0] = color.r;
+      bytes[4 * n + 1] = color.g;
+      bytes[4 * n + 2] = color.b;
+      bytes[4 * n + 3] = color.a;
+    }
+  }
+}
+
+function isSegmentationBoundary(
+    segmentationData: Uint8Array|Int32Array,
+    row: number,
+    column: number,
+    width: number,
+    foregroundIds: number[] = [1],
+    radius = 1,
+): boolean {
+  let numberBackgroundPixels = 0;
+  for (let i = -radius; i <= radius; i++) {
+    for (let j = -radius; j <= radius; j++) {
+      if (i !== 0 && j !== 0) {
+        const n = (row + i) * width + (column + j);
+        if (!foregroundIds.some(id => id === segmentationData[n])) {
+          numberBackgroundPixels += 1;
+        }
+      }
+    }
+  }
+  return numberBackgroundPixels > 0;
+}
+
+export function toContour (
+    personOrPartSegmentation: SemanticPersonSegmentation|
+        SemanticPartSegmentation|PersonSegmentation[]|PartSegmentation[],
+    background: Color = {
+      r: 0,
+      g: 0,
+      b: 0,
+      a: 255
+    },
+    contour: Color = {
+      r: 0,
+      g: 255,
+      b: 255,
+      a: 255
+    },
+    radius: number = 1,
+    foregroundIds: number[] = [1]
+) : ImageData {
+  if (Array.isArray(personOrPartSegmentation) &&
+      personOrPartSegmentation.length === 0) {
+    return null;
+  }
+
+  let multiPersonOrPartSegmentation:
+      Array<SemanticPersonSegmentation|SemanticPartSegmentation|
+          PersonSegmentation|PartSegmentation>;
+
+  if (!Array.isArray(personOrPartSegmentation)) {
+    multiPersonOrPartSegmentation = [personOrPartSegmentation];
+  } else {
+    multiPersonOrPartSegmentation = personOrPartSegmentation;
+  }
+
+  const {width, height} = multiPersonOrPartSegmentation[0];
+  const bytes = new Uint8ClampedArray(width * height * 4);
+
+  for (let i = 0; i < height; i += 1) {
+    for (let j = 0; j < width; j += 1) {
+      const n = i * width + j;
+      bytes[4 * n + 0] = background.r;
+      bytes[4 * n + 1] = background.g;
+      bytes[4 * n + 2] = background.b;
+      bytes[4 * n + 3] = background.a;
+    }
+  }
+
+  for (let i = 0; i < height; i += 1) {
+    for (let j = 0; j < width; j += 1) {
+      const n = i * width + j;
+      for (let k = 0; k < multiPersonOrPartSegmentation.length; k++) {
+        if (foregroundIds.some(
+            id => id === multiPersonOrPartSegmentation[k].data[n])) {
+          const isBoundary = isSegmentationBoundary(
+              multiPersonOrPartSegmentation[k].data, i, j, width,
+              foregroundIds);
+          if (isBoundary) {
+            drawStroke(bytes, i, j, width, radius, contour);
           }
         }
       }
